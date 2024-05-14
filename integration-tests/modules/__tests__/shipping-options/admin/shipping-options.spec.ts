@@ -204,7 +204,7 @@ medusaIntegrationTestRunner({
       })
 
       describe("POST /admin/shipping-options/:id", () => {
-        it("should throw error when required params are missing", async () => {
+        it("should update a shipping option successfully", async () => {
           const shippingOptionPayload = {
             name: "Test shipping option",
             service_zone_id: fulfillmentSet.service_zones[0].id,
@@ -237,73 +237,50 @@ medusaIntegrationTestRunner({
 
           const shippingOptionId = response.data.shipping_option.id
 
-          const updateShippingOptionPayload = {}
-
-          let err = await api
-            .post(
-              `/admin/shipping-options/${shippingOptionId}`,
-              updateShippingOptionPayload,
-              adminHeaders
-            )
-            .catch((e) => e.response)
-
-          const errorsFields = [
-            {
-              code: "invalid_type",
-              expected: "string",
-              received: "undefined",
-              path: ["id"],
-              message: "Required",
-            },
-          ]
-
-          expect(err.status).toEqual(400)
-          expect(err.data).toEqual({
-            type: "invalid_data",
-            message: `Invalid request body: ${JSON.stringify(errorsFields)}`,
-          })
-        })
-
-        it("should create a shipping option successfully", async () => {
-          const shippingOptionPayload = {
-            name: "Test shipping option",
-            service_zone_id: fulfillmentSet.service_zones[0].id,
-            shipping_profile_id: shippingProfile.id,
+          const eurPrice = response.data.shipping_option.prices.find(
+            (p) => p.currency_code === "eur"
+          )
+          const updateShippingOptionPayload = {
+            name: "Updated shipping option",
             provider_id: "manual_test-provider",
             price_type: "flat",
-            type: {
-              label: "Test type",
-              description: "Test description",
-              code: "test-code",
-            },
             prices: [
               {
-                currency_code: "usd",
-                amount: 1000,
+                currency_code: "dkk",
+                amount: 10,
               },
               {
-                region_id: region.id,
-                amount: 1000,
+                id: eurPrice.id,
+                amount: 10000,
               },
             ],
-            rules: [shippingOptionRule],
+            rules: [
+              shippingOptionRule,
+              {
+                operator: RuleOperator.EQ,
+                attribute: "new_attr",
+                value: "true",
+              },
+            ],
           }
 
-          const response = await api.post(
-            `/admin/shipping-options`,
-            shippingOptionPayload,
+          const updateResponse = await api.post(
+            `/admin/shipping-options/${shippingOptionId}`,
+            updateShippingOptionPayload,
             adminHeaders
           )
 
-          expect(response.status).toEqual(200)
-          expect(response.data.shipping_option).toEqual(
+          expect(updateResponse.status).toEqual(200)
+          expect(updateResponse.data.shipping_option.prices).toHaveLength(2)
+          expect(updateResponse.data.shipping_option.rules).toHaveLength(2)
+          expect(updateResponse.data.shipping_option).toEqual(
             expect.objectContaining({
               id: expect.any(String),
-              name: shippingOptionPayload.name,
+              name: updateShippingOptionPayload.name,
               provider: expect.objectContaining({
                 id: shippingOptionPayload.provider_id,
               }),
-              price_type: shippingOptionPayload.price_type,
+              price_type: updateShippingOptionPayload.price_type,
               type: expect.objectContaining({
                 id: expect.any(String),
                 label: shippingOptionPayload.type.label,
@@ -315,13 +292,15 @@ medusaIntegrationTestRunner({
               prices: expect.arrayContaining([
                 expect.objectContaining({
                   id: expect.any(String),
-                  currency_code: "usd",
-                  amount: 1000,
+                  currency_code: "dkk",
+                  rules_count: 0,
+                  amount: 10,
                 }),
                 expect.objectContaining({
                   id: expect.any(String),
                   currency_code: "eur",
-                  amount: 1000,
+                  rules_count: 1,
+                  amount: 10000,
                 }),
               ]),
               rules: expect.arrayContaining([
@@ -330,6 +309,12 @@ medusaIntegrationTestRunner({
                   operator: "eq",
                   attribute: "old_attr",
                   value: "old value",
+                }),
+                expect.objectContaining({
+                  id: expect.any(String),
+                  operator: "eq",
+                  attribute: "new_attr",
+                  value: "true",
                 }),
               ]),
             })

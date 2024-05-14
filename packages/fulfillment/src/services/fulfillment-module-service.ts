@@ -14,21 +14,22 @@ import {
   UpdateServiceZoneDTO,
 } from "@medusajs/types"
 import {
+  arrayDifference,
   EmitEvents,
   FulfillmentUtils,
+  getSetDifference,
   InjectManager,
   InjectTransactionManager,
+  isString,
   MedusaContext,
   MedusaError,
+  Modules,
   ModulesSdkUtils,
-  arrayDifference,
-  getSetDifference,
-  isString,
   promiseAll,
-  Modules
 } from "@medusajs/utils"
 import {
   Fulfillment,
+  FulfillmentProvider,
   FulfillmentSet,
   GeoZone,
   ServiceZone,
@@ -37,10 +38,10 @@ import {
   ShippingOptionType,
   ShippingProfile,
 } from "@models"
-import { isContextValid, validateRules } from "@utils"
-import { entityNameToLinkableKeysMap, joinerConfig } from "../joiner-config"
+import {isContextValid, validateAndNormalizeRules} from "@utils"
+import {entityNameToLinkableKeysMap, joinerConfig} from "../joiner-config"
+import {UpdateShippingOptionsInput} from "../types/service"
 import FulfillmentProviderService from "./fulfillment-provider"
-import { UpdateShippingOptionsInput } from "../types/service"
 
 const generateMethodForModels = [
   ServiceZone,
@@ -49,6 +50,7 @@ const generateMethodForModels = [
   ShippingProfile,
   ShippingOptionRule,
   ShippingOptionType,
+  FulfillmentProvider,
   // Not adding Fulfillment to not auto generate the methods under the hood and only provide the methods we want to expose8
 ]
 
@@ -86,6 +88,7 @@ export default class FulfillmentModuleService<
       ShippingProfile: { dto: FulfillmentTypes.ShippingProfileDTO }
       ShippingOptionRule: { dto: FulfillmentTypes.ShippingOptionRuleDTO }
       ShippingOptionType: { dto: FulfillmentTypes.ShippingOptionTypeDTO }
+      FulfillmentProvider: { dto: FulfillmentTypes.FulfillmentProviderDTO }
     }
   >(FulfillmentSet, generateMethodForModels, entityNameToLinkableKeysMap)
   implements IFulfillmentModuleService
@@ -340,7 +343,7 @@ export default class FulfillmentModuleService<
       | FulfillmentTypes.CreateServiceZoneDTO,
     @MedusaContext() sharedContext: Context = {}
   ): Promise<TServiceZoneEntity | TServiceZoneEntity[]> {
-    let data_ = Array.isArray(data) ? data : [data]
+    const data_ = Array.isArray(data) ? data : [data]
 
     if (!data_.length) {
       return []
@@ -399,7 +402,7 @@ export default class FulfillmentModuleService<
       | FulfillmentTypes.CreateShippingOptionDTO,
     @MedusaContext() sharedContext: Context = {}
   ): Promise<TShippingOptionEntity | TShippingOptionEntity[]> {
-    let data_ = Array.isArray(data) ? data : [data]
+    const data_ = Array.isArray(data) ? data : [data]
 
     if (!data_.length) {
       return []
@@ -407,7 +410,7 @@ export default class FulfillmentModuleService<
 
     const rules = data_.flatMap((d) => d.rules).filter(Boolean)
     if (rules.length) {
-      validateRules(rules as Record<string, unknown>[])
+      validateAndNormalizeRules(rules as Record<string, unknown>[])
     }
 
     const createdShippingOptions = await this.shippingOptionService_.create(
@@ -552,7 +555,7 @@ export default class FulfillmentModuleService<
       return []
     }
 
-    validateRules(data_ as unknown as Record<string, unknown>[])
+    validateAndNormalizeRules(data_ as unknown as Record<string, unknown>[])
 
     const createdShippingOptionRules =
       await this.shippingOptionRuleService_.create(data_, sharedContext)
@@ -1172,7 +1175,7 @@ export default class FulfillmentModuleService<
         })
         .filter(Boolean)
 
-      validateRules(newRules as Record<string, unknown>[])
+      validateAndNormalizeRules(newRules as Record<string, unknown>[])
 
       shippingOption.rules = shippingOption.rules.map((rule) => {
         if (!("id" in rule)) {
@@ -1379,7 +1382,7 @@ export default class FulfillmentModuleService<
       return []
     }
 
-    validateRules(data_ as unknown as Record<string, unknown>[])
+    validateAndNormalizeRules(data_ as unknown as Record<string, unknown>[])
 
     const updatedShippingOptionRules =
       await this.shippingOptionRuleService_.update(data_, sharedContext)
