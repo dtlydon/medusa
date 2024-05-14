@@ -42,7 +42,7 @@ export interface RequestOptions {
   numberOfRetries?: number
 }
 
-export type RequestMethod = "DELETE" | "POST" | "GET"
+export type RequestMethod = "DELETE" | "POST" | "GET" | "PATCH" | "PUT"
 
 const defaultConfig = {
   maxRetries: 0,
@@ -239,7 +239,7 @@ class Client {
       headers: this.setHeaders(options, method, path, customHeaders),
     }
 
-    if (["POST", "DELETE"].includes(method)) {
+    if (["POST", "DELETE", "PATCH", "PUT"].includes(method)) {
       reqOpts["data"] = payload
     }
 

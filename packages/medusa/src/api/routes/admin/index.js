@@ -49,6 +49,13 @@ export default (app, container, config) => {
   app.use("/admin", route)
 
   const adminCors = config.admin_cors || ""
+  console.log(`
+    ======================================== ADMIN CORS ==================================================
+  `)
+  console.log(adminCors)
+  console.log(`
+    ======================================== ADMIN CORS ==================================================
+  `)
   route.use(
     cors({
       origin: parseCorsOrigins(adminCors),

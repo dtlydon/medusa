@@ -7,5 +7,5 @@
  * @customNamespace Hooks.Admin.Custom
  */
 
-export { useAdminCustomDelete, useAdminCustomPost } from "./mutations"
+export { useAdminCustomDelete, useAdminCustomPost, useAdminCustomPatch, useAdminCustomPut } from "./mutations"
 export { useAdminCustomQuery } from "./queries"

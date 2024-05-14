@@ -16,6 +16,7 @@ import TagIcon from "../../fundamentals/icons/tag-icon"
 import UsersIcon from "../../fundamentals/icons/users-icon"
 import SidebarMenuItem from "../../molecules/sidebar-menu-item"
 import UserMenu from "../../molecules/user-menu"
+import { useIsSuperAdmin } from "../../../hooks/use-is-admin"
 
 const ICON_SIZE = 20
 
@@ -25,6 +26,7 @@ const Sidebar: React.FC = () => {
 
   const { isFeatureEnabled } = useFeatureFlag()
   const { store } = useAdminStore()
+  const isSuperAdmin = useIsSuperAdmin()
 
   const { getLinks } = useRoutes()
 
@@ -51,14 +53,16 @@ const Sidebar: React.FC = () => {
             <UserMenu />
           </div>
         </div>
-        <div className="my-base flex flex-col px-2">
-          <span className="text-grey-50 text-small font-medium">
-            {t("sidebar-store", "Store")}
-          </span>
-          <span className="text-grey-90 text-medium font-medium">
-            {store?.name}
-          </span>
-        </div>
+        {!isSuperAdmin && (
+          <div className="my-base flex flex-col px-2">
+            <span className="text-grey-50 text-small font-medium">
+              {t("sidebar-store", "Store")}
+            </span>
+            <span className="text-grey-90 text-medium font-medium">
+              {store?.name}
+            </span>
+          </div>
+        )}
         <div className="py-3.5">
           <SidebarMenuItem
             pageLink={"/a/orders"}
@@ -80,12 +84,14 @@ const Sidebar: React.FC = () => {
               triggerHandler={triggerHandler}
             />
           )}
-          <SidebarMenuItem
-            pageLink={"/a/customers"}
-            icon={<UsersIcon size={ICON_SIZE} />}
-            triggerHandler={triggerHandler}
-            text={t("sidebar-customers", "Customers")}
-          />
+          {isSuperAdmin && (
+            <SidebarMenuItem
+              pageLink={"/a/customers"}
+              icon={<UsersIcon size={ICON_SIZE} />}
+              triggerHandler={triggerHandler}
+              text={t("sidebar-customers", "Customers")}
+            />
+          )}
           {inventoryEnabled && (
             <SidebarMenuItem
               pageLink={"/a/inventory"}
@@ -94,28 +100,38 @@ const Sidebar: React.FC = () => {
               text={t("sidebar-inventory", "Inventory")}
             />
           )}
-          <SidebarMenuItem
-            pageLink={"/a/discounts"}
-            icon={<SaleIcon size={ICON_SIZE} />}
-            triggerHandler={triggerHandler}
-            text={t("sidebar-discounts", "Discounts")}
-          />
-          <SidebarMenuItem
-            pageLink={"/a/gift-cards"}
-            icon={<GiftIcon size={ICON_SIZE} />}
-            triggerHandler={triggerHandler}
-            text={t("sidebar-gift-cards", "Gift Cards")}
-          />
-          <SidebarMenuItem
-            pageLink={"/a/pricing"}
-            icon={<CashIcon size={ICON_SIZE} />}
-            triggerHandler={triggerHandler}
-            text={t("sidebar-pricing", "Pricing")}
-          />
+          {isSuperAdmin && (
+            <SidebarMenuItem
+              pageLink={"/a/discounts"}
+              icon={<SaleIcon size={ICON_SIZE} />}
+              triggerHandler={triggerHandler}
+              text={t("sidebar-discounts", "Discounts")}
+            />
+          )}
+          {isSuperAdmin && (
+            <SidebarMenuItem
+              pageLink={"/a/gift-cards"}
+              icon={<GiftIcon size={ICON_SIZE} />}
+              triggerHandler={triggerHandler}
+              text={t("sidebar-gift-cards", "Gift Cards")}
+            />
+          )}
+          {isSuperAdmin && (
+            <SidebarMenuItem
+              pageLink={"/a/pricing"}
+              icon={<CashIcon size={ICON_SIZE} />}
+              triggerHandler={triggerHandler}
+              text={t("sidebar-pricing", "Pricing")}
+            />
+          )}
           {getLinks().map(({ path, label, icon }, index) => {
             const cleanLink = path.replace("/a/", "")
 
             const Icon = icon ? icon : SquaresPlus
+
+            if (path.includes("vendor") && !isSuperAdmin) {
+              return
+            }
 
             return (
               <SidebarMenuItem
@@ -127,12 +143,14 @@ const Sidebar: React.FC = () => {
               />
             )
           })}
-          <SidebarMenuItem
-            pageLink={"/a/settings"}
-            icon={<GearIcon size={ICON_SIZE} />}
-            triggerHandler={triggerHandler}
-            text={t("sidebar-settings", "Settings")}
-          />
+          {isSuperAdmin && (
+            <SidebarMenuItem
+              pageLink={"/a/settings"}
+              icon={<GearIcon size={ICON_SIZE} />}
+              triggerHandler={triggerHandler}
+              text={t("sidebar-settings", "Settings")}
+            />
+          )}
         </div>
       </div>
     </div>

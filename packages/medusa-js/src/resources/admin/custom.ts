@@ -100,6 +100,40 @@ class AdminCustomResource extends BaseResource {
     )
   }
 
+  patch<TPayload extends Record<string, any>, TResponse = any>(
+    path: string,
+    payload?: TPayload,
+    options?: RequestOptions,
+    customHeaders?: Record<string, any>
+  ): ResponsePromise<TResponse> {
+    const formattedPath = createAdminPath(path)
+
+    return this.client.request(
+      "PATCH",
+      formattedPath,
+      payload,
+      options,
+      customHeaders
+    )
+  }
+
+  put<TPayload extends Record<string, any>, TResponse = any>(
+    path: string,
+    payload?: TPayload,
+    options?: RequestOptions,
+    customHeaders?: Record<string, any>
+  ): ResponsePromise<TResponse> {
+    const formattedPath = createAdminPath(path)
+
+    return this.client.request(
+      "PATCH",
+      formattedPath,
+      payload,
+      options,
+      customHeaders
+    )
+  }
+
   /**
    * Send a `DELETE` request to a custom API Route. The method accepts a type parameters `TResponse` indicating the type of response, which defaults to `any`.
    * @param {string} path - The path of the custom API Route.

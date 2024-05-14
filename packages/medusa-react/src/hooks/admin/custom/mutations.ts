@@ -139,6 +139,34 @@ export const buildCustomOptions = <
  * @category Mutations
  */
 export const useAdminCustomPost = <
+TPayload extends Record<string, any>,
+TResponse
+>(
+/**
+ * The path to the custom endpoint.
+ */
+path: string,
+/**
+ * A list of query keys, used to invalidate data.
+ */
+queryKey: QueryKey,
+/**
+ * A list of related domains that should be invalidated and refetch when the mutation
+ * function is invoked.
+ */
+relatedDomains?: RelatedDomains,
+options?: UseMutationOptions<Response<TResponse>, Error, TPayload>
+) => {
+const { client } = useMedusa()
+const queryClient = useQueryClient()
+
+return useMutation(
+  (payload: TPayload) =>
+    client.admin.custom.post<TPayload, TResponse>(path, payload),
+  buildCustomOptions(queryClient, queryKey, options, relatedDomains)
+)
+}
+export const useAdminCustomPatch = <
   TPayload extends Record<string, any>,
   TResponse
 >(
@@ -162,7 +190,35 @@ export const useAdminCustomPost = <
 
   return useMutation(
     (payload: TPayload) =>
-      client.admin.custom.post<TPayload, TResponse>(path, payload),
+      client.admin.custom.patch<TPayload, TResponse>(path, payload),
+    buildCustomOptions(queryClient, queryKey, options, relatedDomains)
+  )
+}
+export const useAdminCustomPut = <
+  TPayload extends Record<string, any>,
+  TResponse
+>(
+  /**
+   * The path to the custom endpoint.
+   */
+  path: string,
+  /**
+   * A list of query keys, used to invalidate data.
+   */
+  queryKey: QueryKey,
+  /**
+   * A list of related domains that should be invalidated and refetch when the mutation
+   * function is invoked.
+   */
+  relatedDomains?: RelatedDomains,
+  options?: UseMutationOptions<Response<TResponse>, Error, TPayload>
+) => {
+  const { client } = useMedusa()
+  const queryClient = useQueryClient()
+
+  return useMutation(
+    (payload: TPayload) =>
+      client.admin.custom.put<TPayload, TResponse>(path, payload),
     buildCustomOptions(queryClient, queryKey, options, relatedDomains)
   )
 }
